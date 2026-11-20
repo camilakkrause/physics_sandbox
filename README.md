@@ -146,13 +146,13 @@ Attach any built-in force with `sim.add_force(...)`. Built-in forces are vectori
 
 | Force | Signature & Defaults | Physics / Behavior |
 | :--- | :--- | :--- |
-| **`Gravity`** | `Gravity(g=(0.0, 0.0, -9.81))` | Uniform gravitational field $\vec{F}_i = m_i \vec{g}$. Includes gravitational potential energy. Mutate `gravity.g` live to change gravity mid-run. |
-| **`LinearDrag`** | `LinearDrag(gamma=0.1)` | Viscous damping $\vec{F}_i = -\gamma \vec{v}_i$, proportional to velocity (low-speed fluid resistance). |
-| **`QuadraticDrag`** | `QuadraticDrag(c=0.01)` | Aerodynamic drag $\vec{F}_i = -c \|\vec{v}_i\| \vec{v}_i$, proportional to speed squared. |
-| **`Coulomb`** | `Coulomb(k_e=1.0, softening=1e-6)` | Pairwise inverse-square electrostatic force between charged particles (`p.charge`): $\vec{F}_{ij} = k_e \frac{q_i q_j}{(r^2 + \epsilon^2)^{3/2}} \vec{r}_{ij}$. Evaluated symmetrically (conserves momentum) and includes electrostatic potential energy. `softening` ($\epsilon$) avoids singularities at near-zero separation. |
-| **`NBodyGravity`** | `NBodyGravity(G=1.0, softening=1e-6)` | Pairwise Newtonian gravitation between all particles: $\vec{F}_{ij} = -G \frac{m_i m_j}{(r^2 + \epsilon^2)^{3/2}} \vec{r}_{ij}$. Symmetric and includes gravitational potential energy. |
-| **`UniformEMField`** | `UniformEMField(E=(0,0,0), B=(0,0,0))` | Uniform electromagnetic Lorentz force $\vec{F}_i = q_i (\vec{E} + \vec{v}_i \times \vec{B})$ acting on charged particles. Includes electric potential energy from $\vec{E}$. |
-| **`PlaneBoundary`** | `PlaneBoundary(normal=(0,0,1), offset=0.0, stiffness=1e5, damping=10.0)` | Pure Newtonian spring-damper floor or wall keeping particles in the half-space $\hat{n} \cdot \vec{r} \ge \text{offset}$. Penetrating particles feel a linear restoring spring force plus normal damping (no hard impulse discontinuities). |
+| **`Gravity`** | `Gravity(g=(0.0, 0.0, -9.81))` | Uniform gravitational field `Fᵢ = mᵢ g`. Includes gravitational potential energy. Mutate `gravity.g` live to change gravity mid-run. |
+| **`LinearDrag`** | `LinearDrag(gamma=0.1)` | Viscous damping `Fᵢ = -γ vᵢ`, proportional to velocity (low-speed fluid resistance). |
+| **`QuadraticDrag`** | `QuadraticDrag(c=0.01)` | Aerodynamic drag `Fᵢ = -c ‖vᵢ‖ vᵢ`, proportional to speed squared. |
+| **`Coulomb`** | `Coulomb(k_e=1.0, softening=1e-6)` | Pairwise inverse-square electrostatic force between charged particles (`p.charge`): `Fᵢⱼ = kₑ · qᵢ qⱼ / (r² + ε²)^(3/2) · rᵢⱼ`. Evaluated symmetrically (conserves momentum) and includes electrostatic potential energy. `softening` (`ε`) avoids singularities at near-zero separation. |
+| **`NBodyGravity`** | `NBodyGravity(G=1.0, softening=1e-6)` | Pairwise Newtonian gravitation between all particles: `Fᵢⱼ = -G · mᵢ mⱼ / (r² + ε²)^(3/2) · rᵢⱼ`. Symmetric and includes gravitational potential energy. |
+| **`UniformEMField`** | `UniformEMField(E=(0,0,0), B=(0,0,0))` | Uniform electromagnetic Lorentz force `Fᵢ = qᵢ (E + vᵢ × B)` acting on charged particles. Includes electric potential energy from `E`. |
+| **`PlaneBoundary`** | `PlaneBoundary(normal=(0,0,1), offset=0.0, stiffness=1e5, damping=10.0)` | Pure Newtonian spring-damper floor or wall keeping particles in the half-space `n · r ≥ offset`. Penetrating particles feel a linear restoring spring force plus normal damping (no hard impulse discontinuities). |
 
 **Example:**
 
@@ -183,7 +183,7 @@ sim.add_field(
 )
 ```
 
-*(Pass `returns_acceleration=True` if your function returns acceleration $\vec{a}$ instead of force $\vec{F}$.)*
+*(Pass `returns_acceleration=True` if your function returns acceleration `a` instead of force `F`.)*
 
 #### Kinematic Drivers
 Use drivers to prescribe the motion of specific particles over time (e.g., oscillating a membrane node):
@@ -290,7 +290,7 @@ Extend any experiment with trails, overlays, live plots, and interactive **"What
 
 * `viewer.add_trail(particle, max_points=300, color=(0.15, 0.85, 0.35), radius=0.015)` — Attaches a 3D trajectory trail to a particle (or any `() -> np.ndarray` position callback).
 * `viewer.add_marker(name, position_getter, color=..., radius=..., trail=False)` — Draws a custom 3D sphere (e.g., center of mass or an analytical prediction).
-* `viewer.add_vector_overlay(name, origin_getter, vector_getter, color=..., scale=1.0)` — Draws a live 3D vector arrow (e.g., total angular momentum $\vec{L}$).
+* `viewer.add_vector_overlay(name, origin_getter, vector_getter, color=..., scale=1.0)` — Draws a live 3D vector arrow (e.g., total angular momentum `L`).
 * `viewer.add_plot(label, lambda sim: ...)` — Adds a live sparkline plot to the sidebar.
 * `viewer.add_slider(label, min_val, max_val, initial, on_change)` / `viewer.add_checkbox(label, initial, on_change)` — Exposes live parameters right in the sidebar (`sim.set_all_spring_stiffness` and `sim.set_all_spring_damping` pair nicely with sliders).
 
