@@ -1,99 +1,77 @@
-# =======================================================
-# Imports
-# =======================================================
-from physics import *
-from visualization import *
-import numpy as np
+"""2D Wave Propagation in a Pre-Tensioned Mass-Spring Membrane.
 
-# =======================================================
-# Global Parameters
-# =======================================================
-DT = 0.005  # Integrator time-step
-NX = 30  # particles along X
-NY = 30  # particles along Y
-LX = 3.0  # physical width  (physics-x)
-LY = 3.0  # physical height (physics-y)
-K = 100  # spring stiffness
-MASS = 1.0  # particle mass
-DRIVE_PERIOD = 1.0  # oscillation period for centre node
+Demonstrates a 45x45 (2,025-particle, ~3,960-spring) membrane driven at its
+center by a built-in `HarmonicDriver`, with live tension/compression wave
+coloring and interactive frequency/amplitude controls.
+"""
 
-# Derived spacings
-DX = LX / NX
-DY = LY / NY
+from pathlib import Path
+import sys
 
-# =======================================================
-# Simulation Setup
-# =======================================================
-sim = Simulation(dt=DT, damping=False)
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from physics_sandbox import Simulation, Viewer, add_grid_2d
 
-# Helper to flatten (i, j) → list index
-def idx(i: int, j: int) -> int:
-    """Row-major index into sim.particles for grid coordinates (i, j)."""
-    return NY * i + j
+DT = 2e-3
+NX, NY = 45, 45
+LX, LY = 4.0, 4.0
+K = 200.0
+DAMPING = 0.05
+AMPLITUDE = 0.15
+FREQUENCY = 1.2
 
+sim = Simulation(dt=DT, integrator="verlet")
 
-# -------------------------------------------------------
-# Particle Grid
-# -------------------------------------------------------
-for i in range(NX):
-    for j in range(NY):
-        # Clamp boundary: outer frame is fixed
-        movable = not (i == 0 or j == 0 or i == NX - 1 or j == NY - 1)
-        sim.add_particle(
-            mass=MASS,
-            position=(-LX / 2 + i * DX,  # centre the grid at origin
-                      -LY / 2 + j * DY,
-                      0.0),
-            movable=movable
-        )
-
-# -------------------------------------------------------
-# Springs (horizontal & vertical nearest neighbours)
-# -------------------------------------------------------
-for i in range(NX - 1):
-    for j in range(NY - 1):
-        p1 = sim.particles[idx(i, j)]
-        p2 = sim.particles[idx(i + 1, j)]  # right neighbour
-        p3 = sim.particles[idx(i, j + 1)]  # top neighbour
-        sim.add_spring(p1, p2, K, DX * 0.1)
-        sim.add_spring(p1, p3, K, DY * 0.1)
-
-# Centre particle – driven vertically
-middle = sim.particles[idx(NX//2, NY//2)]
-
-# =======================================================
-# Visualization
-# =======================================================
-visual_sim = Visualization(
-    simulation=sim,
-    resolution=(1900, 900),
-    sphere_radius= 0,
-    sphere_color=color.blue,
-    spring_radius=DX / 2,
-    spring_color=color.gray(luminance=0.7)
+# Pre-tensioned membrane (rest_length_scale < 1 creates surface tension)
+grid = add_grid_2d(
+    sim,
+    nx=NX,
+    ny=NY,
+    lx=LX,
+    ly=LY,
+    mass=1.0,
+    k=K,
+    b=DAMPING,
+    rest_length_scale=0.1,
+    pin_boundary=True,
 )
 
+center = grid[NX // 2][NY // 2]
+driver = sim.add_harmonic_driver(
+    center,
+    axis=(0.0, 0.0, 1.0),
+    amplitude=AMPLITUDE,
+    frequency=FREQUENCY,
+)
 
-# =======================================================
-# Main Loop wrapped in play() + Run button
-# =======================================================
-def play():
-    i = 0
-    while True:
-        # Harmonic driving of the centre node (z-direction)
-        middle.pos[2] = 0.1 * sin(2 * pi / DRIVE_PERIOD * sim.time)
+viewer = Viewer(
+    sim,
+    title="2D Wave Propagation (2,025 Particles)",
+    particle_radius=0.0,  # Hide spheres to highlight the spring mesh
+    spring_radius=0.018,
+    color_springs_by_tension=True,
+    ground_plane="none",
+)
+viewer.add_slider(
+    "Drive Frequency (Hz)",
+    0.1,
+    4.0,
+    FREQUENCY,
+    on_change=lambda val: setattr(driver, "frequency", val),
+)
+viewer.add_slider(
+    "Drive Amplitude",
+    0.0,
+    0.4,
+    AMPLITUDE,
+    on_change=lambda val: setattr(driver, "amplitude", val),
+)
+viewer.add_slider(
+    "Damping b",
+    0.0,
+    1.0,
+    DAMPING,
+    on_change=sim.set_all_spring_damping,
+)
 
-        # Throttle rendering to every second physics step
-        if i % 2 == 0:
-            visual_sim.update()
-
-        sim.update()
-        i += 1
-
-
-# VPython button to start the simulation
-button(bind=play, text="Run")
-
-# Keep program alive when the script finishes
-input()
+viewer.show()

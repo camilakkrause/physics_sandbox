@@ -1,0 +1,30 @@
+# Python bytecode & Numba JIT cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.nb[ci]
+
+# Packaging / build artifacts
+*.egg-info/
+.eggs/
+build/
+dist/
+wheels/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Testing & linting caches
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# IDEs & OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
